@@ -9,47 +9,55 @@ var LALOLibPlotsIndex = 0;
 var LALOLibPlots = [];
 var LALOLABPLOTMOVING = false;
 
-export function type( X ) {
-  if ( X && X.type )
+/**
+ * @return {string}
+ */
+export function type(X) {
+  if (X === null)
+    return "undefined";
+  else if (X.type)
     return X.type;
   else {
-    var t = typeof( X );
-    if ( t === "object") {
-      if ( Array.isArray(X) ) {
-        if ( isArrayOfNumbers(X) )
+    let t = typeof (X);
+    if (t === "object") {
+      if (Array.isArray(X)) {
+        if (isArrayOfNumbers(X))
           return "vector";	// for array vectors created by hand
         else
           return "Array";
-      }
-      else if ( X.buffer )
+      } else if (X.buffer)
         return "vector"; // Float64Array vector
       else
         return t;
-    }
-    else
+    } else
       return t;
   }
 }
 
-
-export function isArrayOfNumbers( A ) {
-  for (var i=0; i < A.length; i++)
-    if ( typeof(A[i]) !== "number" )
+/**
+ * @param {Array}
+ * @return {boolean}
+ */
+export function isArrayOfNumbers(A) {
+  for (let i = 0; i < A.length; i++) {
+    if (typeof (A[i]) !== "number")
       return false;
+  }
   return true;
 }
 
-export function isScalar( x ) {
-  switch( type( x ) ) {
+export function isScalar(x) {
+  switch (typeof (x)) {
     case "string":
     case "number":
     case "boolean":
       return true;
       break;
-    case "vector":
-    case "matrix":
     default:
-      return false;
+      if (type(x) === "Complex")
+        return true;
+      else
+        return false;
       break;
   }
 }

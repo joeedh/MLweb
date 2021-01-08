@@ -41,58 +41,6 @@ export function toc(T) {
     return undefined;
 }
 
-/**
- * @return {string}
- */
-export function type(X) {
-  if (X === null)
-    return "undefined";
-  else if (X.type)
-    return X.type;
-  else {
-    let t = typeof (X);
-    if (t === "object") {
-      if (Array.isArray(X)) {
-        if (isArrayOfNumbers(X))
-          return "vector";	// for array vectors created by hand
-        else
-          return "Array";
-      } else if (X.buffer)
-        return "vector"; // Float64Array vector
-      else
-        return t;
-    } else
-      return t;
-  }
-}
-
-/**
- * @param {Array}
- * @return {boolean}
- */
-export function isArrayOfNumbers(A) {
-  for (let i = 0; i < A.length; i++) {
-    if (typeof (A[i]) !== "number")
-      return false;
-  }
-  return true;
-}
-
-export function isScalar(x) {
-  switch (typeof (x)) {
-    case "string":
-    case "number":
-    case "boolean":
-      return true;
-      break;
-    default:
-      if (type(x) === "Complex")
-        return true;
-      else
-        return false;
-      break;
-  }
-}
 
 /**
  * @param {Float64Array}
@@ -265,9 +213,7 @@ export function zeros(rows, cols) {
   }
 }
 
-export function eye(m, n) {
-  if (typeof (n) === "undefined")
-    let n = m;
+export function eye(m, n=m) {
   if (m === 1 && n === 1)
     return 1;
 
@@ -909,14 +855,12 @@ export function supp(x) {
 }
 
 // Range
-export function range(start, end, inc) {
+export function range(start, end, inc=1) {
   // python-like range function
   // returns [0,... , end-1]
   if (typeof (start) === "undefined")
     return [];
 
-  if (typeof (inc) === "undefined")
-    let inc = 1;
   if (typeof (end) === "undefined") {
     let end = start;
     start = 0;
@@ -1096,7 +1040,7 @@ export function randnsparse(NZratio, dim1, dim2) {
 export function randsparse(NZratio, dim1, dim2) {
   // Generates a sparse random matrix with NZratio * dim1*dim2 (or NZ if NZratio > 1 ) nonzeros
   if (typeof (dim2) === "undefined")
-    let dim2 = 1;
+    dim2 = 1;
 
   let NZ;
   if (NZratio > 1)
@@ -1165,23 +1109,51 @@ import {spMatrix} from './sparse.js';
 
 // automatically generate (vectorized) wrappers for Math functions
 export let MathFunctions = Object.getOwnPropertyNames(Math);
+export const VecMath = {};
 
 for (let mf in MathFunctions) {
-  if (eval("typeof(Math." + MathFunctions[mf] + ")") === "function") {
+  let globalPref = "VecMath.";
+  let key = MathFunctions[mf];
+
+  if (typeof Math[key] === "function") {
     if (eval("Math." + MathFunctions[mf] + ".length") === 1) {
       // this is a function of a scalar
       // make generic function:
-      eval(MathFunctions[mf] + " = function (x) { return apply(Math." + MathFunctions[mf] + " , x );};");
+      eval(globalPref + MathFunctions[mf] + " = function (x) { return apply(Math." + MathFunctions[mf] + " , x );};");
       // make vectorized version:
-      eval(MathFunctions[mf] + "Vector = function (x) { return applyVector(Math." + MathFunctions[mf] + " , x );};");
+      eval(globalPref + MathFunctions[mf] + "Vector = function (x) { return applyVector(Math." + MathFunctions[mf] + " , x );};");
       // make matrixized version:
-      eval(MathFunctions[mf] + "Matrix = function (x) { return applyMatrix(Math." + MathFunctions[mf] + " , x );};");
+      eval(globalPref + MathFunctions[mf] + "Matrix = function (x) { return applyMatrix(Math." + MathFunctions[mf] + " , x );};");
     }
-  } else if (eval("typeof(Math." + MathFunctions[mf] + ")") === "number") {
+  } else if (typeof Math[key] === "number") {
     // Math constant:
-    eval(MathFunctions[mf] + " = Math." + MathFunctions[mf]);
+    eval(globalPref + MathFunctions[mf] + " = Math." + MathFunctions[mf]);
   }
 }
+
+/*
+let s = 'let {';
+for (let k in VecMath) {
+  s += `${k}, `;
+}
+s += '} = VecMath';
+
+console.log(s);
+*/
+
+let {abs, absVector, absMatrix, acos, acosVector, acosMatrix, acosh, acoshVector
+      , acoshMatrix, asin, asinVector, asinMatrix, asinh, asinhVector, asinhMatrix,
+      atan, atanVector, atanMatrix, atanh, atanhVector, atanhMatrix, ceil, ceilVector,
+      ceilMatrix, cbrt, cbrtVector, cbrtMatrix, expm1, expm1Vector, expm1Matrix, clz32,
+      clz32Vector, clz32Matrix, cos, cosVector, cosMatrix, cosh, coshVector, coshMatrix,
+      exp, expVector, expMatrix, floor, floorVector, floorMatrix, fround, froundVector,
+      froundMatrix, log, logVector, logMatrix, log1p, log1pVector, log1pMatrix,
+      log2, log2Vector, log2Matrix, log10, log10Vector, log10Matrix, round, roundVector,
+      roundMatrix, sign, signVector, signMatrix, sin, sinVector, sinMatrix, sinh, sinhVector,
+      sinhMatrix, sqrt, sqrtVector, sqrtMatrix, tan, tanVector, tanMatrix, tanh, tanhVector,
+      tanhMatrix, trunc, truncVector, truncMatrix, E, LN10, LN2, LOG10E, LOG2E, PI, SQRT1_2,
+      SQRT2, fract, fractVector, fractMatrix, tent, tentVector,
+      tentMatrix, } = VecMath;
 
 export function apply(f, x) {
   // Generic wrapper to apply scalar functions
@@ -4155,9 +4127,9 @@ export function sort(x, decreasingOrder, returnIndexes) {
   // otherwise return a sorted copy without altering x
 
   if (typeof (decreasingOrder) === "undefined")
-    let decreasingOrder = false;
+    decreasingOrder = false;
   if (typeof (returnIndexes) === "undefined")
-    let returnIndexes = false;
+    returnIndexes = false;
 
   let i;
   let j;
@@ -6147,9 +6119,11 @@ export function implicitSymQRWilkinsonShift(T, computeZ) {
   const mu = T.val[rn1 + n - 1] - t2/(d + Math.sign(d)*Math.sqrt(d*d + t2));
   let x = T.val[0] - mu; // T[0][0]
   let z = T.val[n];		// T[1][0]
-  let cs;
-  if (computeZ)
-    let csArray = new Array(n - 1);
+  let cs, csArray;
+
+  if (computeZ) {
+    csArray = new Array(n - 1);
+  }
   //let Z = eye(n);
 
   let k;
@@ -6264,7 +6238,7 @@ export function eig(A, computeEigenvectors) {
 export function eigs(A, r, smallest) {
   // Compute r largest or smallest eigenvalues and eigenvectors
   if (typeof (r) === "undefined")
-    let r = 1;
+    r = 1;
   if (typeof (smallest) === "undefined" || smallest === false || smallest != "smallest") {
     if (r === 1)
       return eig_powerIteration(A);
@@ -6349,8 +6323,10 @@ export function eig_inverseIteration(A, lambda) {
   // Compute an eigenvalue-eigenvector pair from an approximate eigenvalue with the inverse iteration
   let perturbation = 0.0001*lambda;
 
+  let maxIters;
+
   if (typeof (maxIters) === "undefined")
-    let maxIters = 100;
+    maxIters = 100;
 
   let k;
   const n = A.length;
@@ -6879,6 +6855,8 @@ should return [ 817.7597, 2.4750, 0.0030]
     m = At.length;
   }
 
+  let U, V, Vt, B;
+
   let computeU = false;
   let computeV = false;
   let thinU = false;
@@ -6910,22 +6888,22 @@ should return [ 817.7597, 2.4750, 0.0030]
       UBV = bidiagonalize(A, computeU, thinU, computeV);
 
     if (computeU) {
-      let U = transpose(UBV.U);//Utrans
+      U = transpose(UBV.U);//Utrans
     } else
-      let U = undefined;
+      U = undefined;
 
     if (computeV) {
-      let V = UBV.V;
-      let Vt = transposeMatrix(V);
+      V = UBV.V;
+      Vt = transposeMatrix(V);
     } else
-      let V = undefined;
+      V = undefined;
 
-    let B = UBV.B;
+    B = UBV.B;
   } else {
     if (Atransposed)
-      let B = bidiagonalize(At, false, false, false);
+      B = bidiagonalize(At, false, false, false);
     else
-      let B = bidiagonalize(matrixCopy(A), false, false, false);
+      B = bidiagonalize(matrixCopy(A), false, false, false);
   }
 
   let B22;
@@ -7014,8 +6992,6 @@ should return [ 817.7597, 2.4750, 0.0030]
     iter++;
   } while (q < n) ;
 
-  let U, V;
-
   if (computeUV) {
 
     if (computeV)
@@ -7045,10 +7021,12 @@ should return [ 817.7597, 2.4750, 0.0030]
       U = get(U, indexes, []);
     }
 
+    let S;
+
     if (thinU)
-      let S = diag(s);
+      S = diag(s);
     else
-      let S = mat([diag(s), zeros(m - n, n)], true);
+      S = mat([diag(s), zeros(m - n, n)], true);
 
     let Ut = undefined;
     if (computeU)
