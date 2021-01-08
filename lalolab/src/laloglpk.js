@@ -8,13 +8,20 @@ else {
 	//importScripts("glpk.min.js");
 }*/
 
+export var lp;
+export var linprog;
+
 // Install glpk as lp function: 
-if ( typeof(lp) == "undefined" ) {
+if ( typeof(globalThis.lp) == "undefined" ) {
 	lp = glp;
 	linprog = glp;
+} else {
+	lp = linprog = globalThis.lp;
+
 }
 
-function glp (c, A, b, Aeq, beq, lb , ub, integer_variables, verbose) {
+
+export function glp (c, A, b, Aeq, beq, lb , ub, integer_variables, verbose) {
 /*
 	Call GLPK to solve 
 	min c' x s.t. Ax<= b, Aeq = beq, lb<= x <= ub, x[integer_variables] in Z
@@ -191,8 +198,8 @@ xsol = glp(c, [],[],A, b,lb,[])
 			return sol;
 		}
 		else {
-			GLPLASTLP = "";
-			glp_write_lp(prob, undefined, function (str) {GLPLASTLP += str + "<br>";});
+			globalThis.GLPLASTLP = "";
+			glp_write_lp(prob, undefined, function (str) {globalThis.GLPLASTLP += str + "<br>";});
 			return "RC=" + rc + " ; Status : "  + glp_get_status(prob) + "(OPT=" + GLP_OPT + ",FEAS=" + GLP_FEAS + ",INFEAS=" + GLP_INFEAS + ",NOFEAS=" + GLP_NOFEAS + ",UNBND=" + GLP_UNBND + ",UNDEF=" + GLP_UNDEF + ")" ;
 		}
 	}
@@ -202,7 +209,7 @@ xsol = glp(c, [],[],A, b,lb,[])
 ///////////////////////////////:
 /////// L1-minimization and sparse recovery //////////
 ///////////
-function minl1 ( A, b) {
+export function minl1 ( A, b) {
 	/*
 		Solves min ||x||_1 s.t. Ax = b
 		
@@ -251,7 +258,7 @@ x=minl1(A,A*r)
 
 
 
-function minl0 ( A, b, M) {
+export function minl0 ( A, b, M) {
 	/*
 		Solves min ||x||_0 s.t. Ax = b  -M <= x <= M
 		
@@ -311,9 +318,9 @@ x=minl0(A,A*r)
 ///////////////////////////////////////////
 /// Quadratic Programming 
 ////////////////
-quadprog = qp;
+export var quadprog = qp;
 
-function qp(Q,c,A,b,Aeq,beq,lb,ub,x0, epsilon) {
+export function qp(Q,c,A,b,Aeq,beq,lb,ub,x0, epsilon) {
 	// Solve quad prog by Frank-Wolfe algorithm
 	/*
 		min 0.5 x' * Q * x  c' * x

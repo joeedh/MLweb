@@ -2,7 +2,7 @@
 /////////////////////////////////////////:
 //// Unconstrained Minimization
 /////////////////////////////////////////
-function minimize( f, grad, x0 ) {
+export function minimize( f, grad, x0 ) {
 /*
 function loss(x) {
 return (norm(b - A*x)^2)
@@ -48,7 +48,7 @@ norm(x - xh)
 		return bfgs(f, grad, x);
 }
 
-function secant( f, grad, x0 ) {
+export function secant( f, grad, x0 ) {
 	// for a unidimensional function f
 	// find a root to f'(x) = 0 with the secant method
 	const TOLx = 1e-6;
@@ -71,7 +71,7 @@ function secant( f, grad, x0 ) {
 }
 
 
-function steepestdescent(f, grad, x0) {
+export function steepestdescent(f, grad, x0) {
 	// assume x is a vector
 	
 	const TOLobj = 1e-8;
@@ -84,6 +84,8 @@ function steepestdescent(f, grad, x0) {
 	var g = grad(x);
 	var normg = norm(g);
 	var iter = 0;
+	let prevobj;
+
 	do {
 		
 		// line search
@@ -104,7 +106,7 @@ function steepestdescent(f, grad, x0) {
 	return x;
 }
 
-function bfgs( f, grad, x0 ) {
+export function bfgs( f, grad, x0 ) {
 	// assume x is a vector
 	
 	const n = x0.length;
@@ -121,6 +123,8 @@ function bfgs( f, grad, x0 ) {
 	var Hgamma;
 	var dH;
 	var iter = 0;
+	let prevobj;
+
 	do {
 		g = grad(x);
 		normg = norm(g);
@@ -172,8 +176,8 @@ function bfgs( f, grad, x0 ) {
  * @param {number}
  * @param {number}
  * @return {number}  
- */ 
-function mincubic(p0, p1, x1, px1, x2, px2, lb, ub) {
+ */
+export function mincubic(p0, p1, x1, px1, x2, px2, lb, ub) {
 
 	const x1square = x1*x1;
 	const x2square = x2*x2;
@@ -197,7 +201,7 @@ function mincubic(p0, p1, x1, px1, x2, px2, lb, ub) {
  * @param {number}
  * @return {number}  
  */
-function minquadratic(p0, p1, px1, x1, lb, ub) {	
+export function minquadratic(p0, p1, px1, x1, lb, ub) {
     var x = - p1/(2 * x1 * (px1 - p0 - p1) );
     return Math.min(ub, Math.max(lb, x));
 }
@@ -213,7 +217,7 @@ function minquadratic(p0, p1, px1, x1, lb, ub) {
  * @param {number}
  * @return {{Float64Array|number}}  
  */
-function armijo (f, xc, fc, g, normg ) {
+export function armijo (f, xc, fc, g, normg ) {
 	// Armijo's rule line search in the direction of gradient g
 	const alpha = 0.0001;
 	const blow = 0.1;
@@ -254,7 +258,7 @@ function armijo (f, xc, fc, g, normg ) {
 	}
 	return {"lambda": lambda, "x": xt, "obj": ft};
 }
-function armijodir (f, xc, fc, g, d ) {
+export function armijodir (f, xc, fc, g, d ) {
 	// Armijo's rule line search in the direction d
 	const alpha = 0.0001;
 	const blow = 0.1;
